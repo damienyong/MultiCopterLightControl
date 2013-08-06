@@ -22,7 +22,7 @@
   #define HEADER_CMD    5
   #define HEADER_ERR    6
 
-  uint8_t checksum, indRX, cmdMSP;
+  uint8_t checksum, indRX, cmdMSP, cfg;
   uint8_t inBuf[INBUF_SIZE];
 
   void setupInputGUI(){
@@ -95,6 +95,15 @@
   
   void evaluateCommand() {
     switch(cmdMSP) {
+      case MSP_COLORS:
+        readColors();
+        headSerialReply(3*MAX_EEPROM_COLORS);
+        for (int i=0; i<MAX_EEPROM_COLORS; i++){
+          serialize8(storedColorsRGB[i].r);
+          serialize8(storedColorsRGB[i].g);
+          serialize8(storedColorsRGB[i].b);
+        }
+      break;
       case MSP_SET_COLORS:
         headSerialReply(0);
         for (int i=0; i<MAX_EEPROM_COLORS; i++){
@@ -105,6 +114,22 @@
           storedColorsRGB[i] = rgb;
         }
       break;
+      case MSP_SET_CONFIGS:
+        headSerialReply(0);
+        config = read8() % max_led_configs;
+        for (int i=0; i<num_led_bytes; i++){
+          storedLedColors[config][i] = read8();
+        }
+      break;
+      case MSP_CONFIGS:
+        readLeds();
+        cfg = read8() % max_led_configs;
+        headSerialReply(num_led_bytes + 1);
+        serialize8(cfg);
+        for (int j=0; j<num_led_bytes; j++){
+          serialize8(storedLedColors[cfg][j]);
+        }
+      break;
       case MSP_SAVE_COLORS:
         headSerialReply(0);
         writeColors();
@@ -113,37 +138,12 @@
         headSerialReply(0);
         writeLeds();
       break;
-      case MSP_SET_CONFIGS:
-        headSerialReply(0);
-        config = read8();
-        for (int i=0; i<((NUM_LEDS/2)+1); i++){
-          storedLedColors[config][i] = read8();
-        }
-      break;
-      case MSP_CONFIGS:
-        readLeds();
-        headSerialReply(MAX_LED_CONFIGS * ((NUM_LEDS/2)+1));
-        for (int i=0; i<MAX_LED_CONFIGS; i++){
-          for (int j=0; j<((NUM_LEDS/2)+1); j++){
-            serialize8(storedLedColors[i][j]);
-          }
-        }
-      break;
       case MSP_SETUP:
         headSerialReply(4);
         serialize8(NUM_ARMS);
         serialize8(LEDS_PER_ARM);
         serialize8(MAX_EEPROM_COLORS);
-        serialize8(MAX_LED_CONFIGS);
-      break;
-      case MSP_COLORS:
-        readColors();
-        headSerialReply(3*MAX_EEPROM_COLORS);
-        for (int i=0; i<MAX_EEPROM_COLORS; i++){
-          serialize8(storedColorsRGB[i].r);
-          serialize8(storedColorsRGB[i].g);
-          serialize8(storedColorsRGB[i].b);
-        }
+        serialize8(max_led_configs);
       break;
       case MSP_NEXT_MODE:
         headSerialReply(0);
@@ -155,11 +155,11 @@
       break;
       case MSP_NEXT_CONFIG:
         headSerialReply(0);
-        config = (config+1) % MAX_LED_CONFIGS;
+        config = (config+1) % max_led_configs;
       break;
       case MSP_PREV_CONFIG:
         headSerialReply(0);
-        config = (config+(MAX_LED_CONFIGS-1)) % MAX_LED_CONFIGS;
+        config = (config+(max_led_configs-1)) % max_led_configs;
       break;
     }
     tailSerialReply();

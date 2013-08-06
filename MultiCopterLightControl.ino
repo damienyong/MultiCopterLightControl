@@ -13,6 +13,7 @@ int currentColorIdx = 0;
 
 void setup(){
   LEDS.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS);
+  initColors();
   clearLeds();
   readColors();
   readLeds();

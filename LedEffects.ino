@@ -8,7 +8,7 @@ void showCurrentColors(int iConfig, int DELAY){
   if (!checkDelay(DELAY)) return;
   clearLeds();
   for (int i=0; i<NUM_LEDS; i++){
-    setLed(i, getLedRGB(i, iConfig % MAX_LED_CONFIGS));
+    setLed(i, getLedRGB(i, iConfig % max_led_configs));
   }
   show();
 }
@@ -47,7 +47,7 @@ void runningLed(int iConfig, CRGB* blinkColor, int blinkDelay, boolean bounce, i
     int iLed = runningOffset-(length-1) + i;
     if (iLed<0 || iLed>=LEDS_PER_ARM) continue;
     for (int a=0; a<NUM_ARMS; a++){
-      setLed(iLed, getLedRGB(iLed, iConfig % MAX_LED_CONFIGS));
+      setLed(iLed, getLedRGB(iLed, iConfig % max_led_configs));
       iLed += LEDS_PER_ARM;
     }
   }
@@ -95,7 +95,7 @@ void runningLed2(int iConfig, int arms1[], int arm1Size, int arms2[], int arm2Si
       int a = currentArms[ca];
       if (a<0 || a>=NUM_ARMS) continue;
       int il = getLedIdx(a, iLed);
-      setLed(il, getLedRGB(il, iConfig % MAX_LED_CONFIGS));
+      setLed(il, getLedRGB(il, iConfig % max_led_configs));
     }
   }
   show();
@@ -170,7 +170,7 @@ void runningDot(int iConfig, CRGB* blinkColor, boolean bounce, int DELAY){
   clearLeds();
 
   for (int i=0; i<NUM_LEDS; i++){
-    setLed(i, getLedRGB(i, iConfig % MAX_LED_CONFIGS));
+    setLed(i, getLedRGB(i, iConfig % max_led_configs));
   }
 
   int iLed = runningOffset;

@@ -1,13 +1,19 @@
 // DON'T CHANGE THESE VALUES, OTHERWISE THE COMPLETE MANAGEMENT OF COLORS ISN'T WORKING
 #define MAX_EEPROM_COLORS      16
-#define MAX_LED_CONFIGS        8
 #define EEPROM_COLORS_OFFSET   MAX_EEPROM_COLORS*3
+#define EEPROM_SIZE            512
 
 CRGB storedColorsRGB[MAX_EEPROM_COLORS];
 CRGB currentRGB = CRGB(0, 0, 0);
 
 int num_led_bytes = ceil(NUM_LEDS/2.0f);
-uint8_t storedLedColors[MAX_LED_CONFIGS][(NUM_LEDS/2)+1];
+int max_led_configs = floor((EEPROM_SIZE - EEPROM_COLORS_OFFSET) / ((float)num_led_bytes));
+uint8_t **storedLedColors;
+
+void initColors(){
+  storedLedColors = (uint8_t **) malloc(max_led_configs * sizeof(uint8_t *));
+  for (int i=0; i<max_led_configs; i++) storedLedColors[i] = (uint8_t *) malloc(num_led_bytes * sizeof(uint8_t));
+}
 
 void setColor(CRGB c, int idx){
   idx = idx % MAX_EEPROM_COLORS;
@@ -40,7 +46,7 @@ void readColors(){
 }
 
 void writeLeds(){
-  for (int i=0; i<MAX_LED_CONFIGS; i++){
+  for (int i=0; i<max_led_configs; i++){
     for (int j=0; j<num_led_bytes; j++){
       EEPROM.write(EEPROM_COLORS_OFFSET + (i * num_led_bytes) + j, (byte) storedLedColors[i][j]);
     }
@@ -48,7 +54,7 @@ void writeLeds(){
 }
 
 void readLeds(){
-  for (int i=0; i<MAX_LED_CONFIGS; i++){
+  for (int i=0; i<max_led_configs; i++){
     for (int j=0; j<num_led_bytes; j++){
       storedLedColors[i][j] = (uint8_t)EEPROM.read(EEPROM_COLORS_OFFSET + (i * num_led_bytes) + j);
     }
@@ -67,7 +73,7 @@ void setArmColor(int colorIdx, int iArm, int iConfig){
 
 void setColorIndex(int iLed, int iConfig, int iColor){
   iLed %= NUM_LEDS;
-  iConfig %= MAX_LED_CONFIGS;
+  iConfig %= max_led_configs;
   int ledByte = floor(iLed / 2);
   uint8_t value = storedLedColors[iConfig][ledByte];
   if (iLed%2==0) value = ((iColor % MAX_EEPROM_COLORS)<<4) + (value & 0xF);
@@ -77,7 +83,7 @@ void setColorIndex(int iLed, int iConfig, int iColor){
 
 uint8_t getColorIndex(int iLed, int iConfig){
   iLed %= NUM_LEDS;
-  iConfig %= MAX_LED_CONFIGS;
+  iConfig %= max_led_configs;
   int ledByte = floor(iLed / 2);
   uint8_t value = storedLedColors[iConfig][ledByte];
   if (iLed%2==1) return (uint8_t)(value & 0xF);
