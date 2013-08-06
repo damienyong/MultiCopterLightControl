@@ -1,8 +1,6 @@
 #if defined (INPUT_GUI)
 
-  #define INBUF_SIZE 512
-  #define TX_BUFFER_SIZE 512
-  #define RX_BUFFER_SIZE 512
+  #define INBUF_SIZE 256
   
   #define MSP_SETUP        150
   #define MSP_COLORS       151
@@ -25,15 +23,11 @@
   #define HEADER_ERR    6
 
   uint8_t checksum, indRX, cmdMSP;
-  uint8_t serialBufferRX[RX_BUFFER_SIZE];
-  volatile uint8_t serialHeadRX, serialTailRX;
-  volatile uint8_t serialHeadTX, serialTailTX;
-  uint8_t serialBufferTX[TX_BUFFER_SIZE];
   uint8_t inBuf[INBUF_SIZE];
 
   void setupInputGUI(){
     Serial.begin(115200);
-    pinMode(13, OUTPUT);
+    pinMode(13, OUTPUT); // onboard LED
     digitalWrite(13, LOW);
   }
   
@@ -71,16 +65,8 @@
   
   void tailSerialReply() {
     serialize8(checksum);
-    UartSendData();
   }
   
-  void UartSendData() {
-    while(serialHeadTX != serialTailTX) {
-      if (++serialTailTX >= TX_BUFFER_SIZE) serialTailTX = 0;
-      Serial.write(serialBufferTX[serialTailTX]);
-    }
-  }
-
   void headSerialResponse(uint8_t err, uint8_t s) {
     serialize8('$');
     serialize8('M');
@@ -103,11 +89,8 @@
   }
 
   void serialize8(uint8_t a) {
-    uint8_t t = serialHeadTX;
-    if (++t >= TX_BUFFER_SIZE) t = 0;
-    serialBufferTX[t] = a;
+    Serial.write(a);
     checksum ^= a;
-    serialHeadTX = t;
   }
   
   void evaluateCommand() {
@@ -190,8 +173,6 @@ void serialCom() {
   
   while (Serial.available()>0) {
       digitalWrite(13, HIGH);
-      uint8_t bytesTXBuff = ((uint8_t)(serialHeadTX-serialTailTX))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
-      if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
       c = Serial.read();
       // regular data handling to detect and handle MSP and other data
         if (c_state == HEADER_IDLE) {

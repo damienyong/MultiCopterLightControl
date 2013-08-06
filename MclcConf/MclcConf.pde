@@ -6,7 +6,7 @@ private static final int WINDOW_X = 800;
 private static final int WINDOW_Y = 600;
 private static final int GUI_BAUD_RATE = 115200;
 private static final String FONT_NAME = "Times New Roman"; 
-private static final int BUFFER_SIZE = 512;
+private static final int BUFFER_SIZE = 256;
 
 boolean setupDone = false;
 boolean initCom = false;

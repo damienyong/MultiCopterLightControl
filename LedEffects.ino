@@ -18,7 +18,7 @@ void police(CRGB* color1, CRGB* color2, int DELAY){
   if (!checkDelay(DELAY)) return;
   int p1 = LEDS_PER_ARM / 2;
   int p2 = LEDS_PER_ARM;
-  
+
   int s = p1;
   int e = p2;
   CRGB c = *color2;
@@ -52,15 +52,15 @@ void runningLed(int iConfig, CRGB* blinkColor, int blinkDelay, boolean bounce, i
     }
   }
   show();
-  
+
   if (bounce){
     if (runningOffset==0) runningForward = true;
     else if (runningOffset==(LEDS_PER_ARM+(length-1)-1)) runningForward = false;
   }
   else runningForward = true;
-  
+
   boolean flash = (blinkDelay>0 && runningOffset == (LEDS_PER_ARM+(length-1)-1));
-  
+
   if (runningForward) runningOffset = (runningOffset+1)%(LEDS_PER_ARM+(length-1));
   else runningOffset = (runningOffset+(LEDS_PER_ARM+(length-1))-1)%(LEDS_PER_ARM+(length-1));
 
@@ -79,7 +79,7 @@ void runningLed2(int iConfig, int arms1[], int arm1Size, int arms2[], int arm2Si
   for (int i=0; i<length; i++){
     int iLed = runningOffset-(length-1) + i;
     if (iLed<0 || iLed>=LEDS_PER_ARM) continue;
-    
+
     int* currentArms = NULL;
     int currentSize = 0;
     if (runningForward == switchArms){
@@ -90,7 +90,7 @@ void runningLed2(int iConfig, int arms1[], int arm1Size, int arms2[], int arm2Si
       currentArms = arms2;
       currentSize = arm2Size;
     }
-    
+
     for (int ca=0; ca<currentSize; ca++){
       int a = currentArms[ca];
       if (a<0 || a>=NUM_ARMS) continue;
@@ -99,7 +99,7 @@ void runningLed2(int iConfig, int arms1[], int arm1Size, int arms2[], int arm2Si
     }
   }
   show();
-  
+
   if (arms2!=NULL && arm2Size>0){
     if (runningOffset==0){
       runningForward = true;
@@ -110,7 +110,7 @@ void runningLed2(int iConfig, int arms1[], int arm1Size, int arms2[], int arm2Si
     }
   }
   else runningForward = true;
-  
+
   if (runningForward) runningOffset = (runningOffset+1)%(LEDS_PER_ARM+(length-1));
   else runningOffset = (runningOffset+(LEDS_PER_ARM+(length-1))-1)%(LEDS_PER_ARM+(length-1));
 }
@@ -156,11 +156,80 @@ void blendColors(int config1, int config2, int steps, int DELAY){
     setLed(i, rgb);
   }
   show();
-  
+
   if (blendingStep==0) blendingForward = true;
   else if (blendingStep==(steps-1)) blendingForward = false;
-  
+
   if (blendingForward) blendingStep = (blendingStep+1)%steps;
   else blendingStep = (blendingStep+(steps-1))%steps;
 }
+
+void runningDot(int iConfig, CRGB* blinkColor, boolean bounce, int DELAY){
+  if (!checkDelay(DELAY)) return;
+
+  clearLeds();
+
+  for (int i=0; i<NUM_LEDS; i++){
+    setLed(i, getLedRGB(i, iConfig % MAX_LED_CONFIGS));
+  }
+
+  int iLed = runningOffset;
+  for (int a=0; a<NUM_ARMS; a++){
+    setLed(iLed, *blinkColor);
+    iLed += LEDS_PER_ARM;
+  }
+  show();
+
+  if (bounce){
+    if (runningOffset<=0) runningForward = true;
+    else if (runningOffset>=(LEDS_PER_ARM-1)) runningForward = false;
+  }
+  else runningForward = true;
+
+  runningOffset = runningForward ?
+  (runningOffset+1)%LEDS_PER_ARM : (runningOffset-1)%LEDS_PER_ARM;
+
+}
+
+CRGB aColor;
+void runningMorph(boolean change_r, boolean change_g, boolean change_b, int DELAY){
+  if (!checkDelay(DELAY)) return;
+
+  clearLeds();
+
+  aColor = CRGB(0, 0, 0);
+  if ( change_r )
+    aColor.r = 255;
+  if ( change_g )
+    aColor.g = 255;
+  if ( change_b )
+    aColor.b = 255;
+
+  float reduction = 1.0 - ( 3 * ( 1.0 / LEDS_PER_ARM ) );
+  //  reduction = 0.9;
+
+  int iLed;
+
+  for (int b=0; b<LEDS_PER_ARM; b++){
+    if ( change_r )
+      aColor.r *= reduction;
+    if ( change_g )
+      aColor.g *= reduction;
+    if ( change_b )
+      aColor.b *= reduction;
+    iLed = (b + runningOffset) % LEDS_PER_ARM;
+    setLed(iLed, aColor);
+    iLed += LEDS_PER_ARM;
+    setLed(iLed, aColor);
+    iLed += LEDS_PER_ARM;
+    setLed(iLed, aColor);
+    iLed += LEDS_PER_ARM;
+    setLed(iLed, aColor);
+  }
+  show();
+
+  runningOffset = runningForward ?
+  (runningOffset+1)%LEDS_PER_ARM : (runningOffset-1)%LEDS_PER_ARM;
+} 
+
 
