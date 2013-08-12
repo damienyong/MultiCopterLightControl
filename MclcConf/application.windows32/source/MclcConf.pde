@@ -6,11 +6,12 @@ private static final int WINDOW_X = 800;
 private static final int WINDOW_Y = 600;
 private static final int GUI_BAUD_RATE = 115200;
 private static final String FONT_NAME = "Times New Roman"; 
-private static final int BUFFER_SIZE = 512;
+private static final int BUFFER_SIZE = 256;
 
 boolean setupDone = false;
 boolean initCom = false;
 int setupStatus = NEED_SETUP;
+int configsRead = 0;
 String selectedPort = null;
 
 int BLACK = color(0, 0, 0);
@@ -28,6 +29,7 @@ private int ledsPerArm = -1;
 private int maxColors = -1;
 private int maxConfigs = -1;
 private int numLeds = -1;
+private int num_led_bytes = -1;
 
 private static final String MSP_HEADER = "$M<";
 
@@ -411,9 +413,11 @@ public void evaluateCommand(byte cmd, int dataSize) {
         maxColors = read8();
         maxConfigs = read8();
         numLeds = numArms * ledsPerArm;
+        num_led_bytes = ceil(numLeds/2.0f);
         dlPorts.setVisible(false);
         tlPorts.setText("Port: " + selectedPort);
         setupStatus = NEED_COLORS;
+        configsRead = 0;
       }
       break;
     case MSP_COLORS:
@@ -431,28 +435,36 @@ public void evaluateCommand(byte cmd, int dataSize) {
       activateButton(activeButton);
       break;
     case MSP_CONFIGS:
-      boolean update = ledConfigs!=null;
-      if (!update) ledConfigs = new ArrayList<List<Integer>>(maxConfigs);
-      for (int i=0; i<maxConfigs; i++){
-        int iLed = 0;
-        if (!update) ledConfigs.add(new ArrayList<Integer>(numLeds));         
-        for (int j=0; j<((numLeds/2)+1); j++){
-          int c = read8();
-          if (iLed >= numLeds) continue;
-          int c1 = (c >> 4);
-          if (update) ledConfigs.get(i).set(iLed, c1);
-          else ledConfigs.get(i).add(c1);
-          iLed++;
-          if (iLed >= numLeds) continue;
-          int c2 = (c & 0xF);
-          if (update) ledConfigs.get(i).set(iLed, c2);
-          else ledConfigs.get(i).add(c2);
-          iLed++;
+      if (ledConfigs==null){
+        ledConfigs = new ArrayList<List<Integer>>(maxConfigs);
+        for (int i=0; i<maxConfigs; i++){
+          List<Integer> temp = new ArrayList<Integer>(numLeds);
+          for (int j=0; j<numLeds; j++) temp.add(0);
+          ledConfigs.add(temp);
         }
       }
-      if (setupStatus == NEED_CONFIGS) createLedButtons(ledConfigs.get(activeConfig), 20, 220, 45, 45, 2, 2);
-      setupStatus = max(setupStatus, DONE);
-      activateConfig(activeConfig);
+      int config_to_read = read8();
+      int iLed = 0;
+      for (int j=0; j<num_led_bytes; j++){
+        int c = read8();
+        if (iLed >= numLeds) continue;
+        int c1 = (c >> 4);
+        ledConfigs.get(config_to_read).set(iLed, c1);
+        iLed++;
+        if (iLed >= numLeds) continue;
+        int c2 = (c & 0xF);
+        ledConfigs.get(config_to_read).set(iLed, c2);
+        iLed++;
+      }
+      if (setupStatus == NEED_CONFIGS){
+        configsRead++;
+        if (configsRead == maxConfigs){
+          createLedButtons(ledConfigs.get(activeConfig), 20, 220, 45, 45, 2, 2);
+          setupStatus = DONE;
+          activateConfig(activeConfig);
+        }
+      }
+      else activateConfig(activeConfig);
       break;
     default:
         //println("Don't know how to handle reply "+icmd);
@@ -483,7 +495,11 @@ public void saveColors(){
 }
 
 public void getConfigs(){
-  sendRequestMSP(requestMSP(MSP_CONFIGS));
+  for (int i=0; i<maxConfigs; i++){
+    List<Character> payload = new ArrayList<Character>();
+    payload.add(char(i));
+    sendRequestMSP(requestMSP(MSP_CONFIGS, payload.toArray( new Character[payload.size()]) ));
+  }
   activateConfig(activeConfig);
 }
 
@@ -501,8 +517,7 @@ public void setConfigs(){
       value = 0;
     }
   }
-  if (numLeds%2==0) payload.add(char(0));
-  else payload.add(char(value));
+  payload.add(char(value));
   sendRequestMSP(requestMSP(MSP_SET_CONFIGS, payload.toArray( new Character[payload.size()]) )); 
 }
 
@@ -546,7 +561,7 @@ private void readSerialMessages(){
         }
         break;
         case NEED_CONFIGS:{
-          sendRequestMSP(requestMSP(MSP_CONFIGS));
+          getConfigs();
         }
         break;
       }
