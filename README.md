@@ -221,3 +221,19 @@ z.B. ersetzen durch
 Welche Reihenfolge bei euch die richtigen Farben erzeugt, könnt ihr einfach austesten.
 Es gibt lediglich 6 möglichen Reihenfolgen: RGB, RBG, GRB, GBR, BRG und BGR.
 Evtl. werde ich diese Konfiguration in Zukunft ebenfalls in die 'config.h' aufnehmen.
+
+Hilfreiche Links zum Thema WS2811/WS2812/NeoPixel
+=================================================
+Die hier verwendete Bibliothek FastLED bzw. deren Wiki, insbesondere die Abschnitte "Wiring leds" und "Power notes" sind wichtig und lesenswert: <br/>
+https://github.com/FastLED/FastLED/wiki/Wiring-leds<br/>
+https://github.com/FastLED/FastLED/wiki/Power-notes<br/>
+
+Adafruit Guide zu den NeoPixels, insbesondere die Abschnitte "Best Practices" und "Powering NeoPixels" sind wichtig und lesenswert:<br/>
+https://learn.adafruit.com/adafruit-neopixel-uberguide/best-practices<br/>
+https://learn.adafruit.com/adafruit-neopixel-uberguide/power<br/>
+
+Beschreibung und Tipps zu der Teensy-Bibliothek OctoWS2811:<br/>
+http://www.pjrc.com/teensy/td_libs_OctoWS2811.html<br/>
+
+Ich kann jedem der sich für LEDs interessiert auch nur die Google+ Seite von FastLED empfehlen. Hier findet man immer wieder neue Anregeungen und kreative Ideen, was man mit LEDs alles machen kann:<br/>
+https://plus.google.com/communities/109127054924227823508<br/>
