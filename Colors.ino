@@ -13,9 +13,7 @@ void setColor(CRGB c, int idx){
   idx = idx % MAX_EEPROM_COLORS;
   storedColorsRGB[idx] = c;
   printColor(c);
-  SERIAL_PRINT(" stored as color ");
-  SERIAL_PRINTLN(idx);
-}
+ }
 
 void clearEeprom(){
   for (int i = 0; i < 512; i++) EEPROM.write(i, 0);
@@ -89,12 +87,6 @@ CRGB getLedRGB(int iLed, int iConfig){
 }
 
 void printColor(CRGB c){
-  SERIAL_PRINT("(r=");
-  SERIAL_PRINT(c.r);
-  SERIAL_PRINT(", g=");
-  SERIAL_PRINT(c.g);
-  SERIAL_PRINT(", b=");
-  SERIAL_PRINT(c.b);
-  SERIAL_PRINT(")");
+ 
 }
 

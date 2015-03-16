@@ -14,18 +14,18 @@ void showCurrentColors(int iConfig, int DELAY){
 }
 
 boolean policeFirst = true;
-void police(CRGB* color1, CRGB* color2, int DELAY){
+void police(CRGB color1, CRGB color2, int DELAY){
   if (!checkDelay(DELAY)) return;
   int p1 = LEDS_PER_ARM / 2;
   int p2 = LEDS_PER_ARM;
   
   int s = p1;
   int e = p2;
-  CRGB c = *color2;
+  CRGB c = color2;
   if (policeFirst){
     s = 0;
     e = p1;
-    c = *color1;
+    c = color1;
   }
   clearLeds();
   for (int a=0; a<NUM_ARMS; a++){
@@ -36,6 +36,58 @@ void police(CRGB* color1, CRGB* color2, int DELAY){
   show();
   policeFirst = !policeFirst;
 }
+
+
+void random_red() {                            //QUICK 'N DIRTY RANDOMIZE TO GET CELL AUTOMATA STARTED
+  int temprand;
+  for (int i = 0; i < NUM_LEDS; i++ ) {
+    temprand = random(0, 100);
+    if (temprand > 50) {
+      leds[i].r = 255;
+    }
+    if (temprand <= 50) {
+      leds[i].r = 0;
+    }
+    leds[i].b = 0; leds[i].g = 0;
+  }
+  LEDS.show();
+}
+
+
+
+
+
+
+
+boolean rainbowFirst =true;
+void rainbow_fade(int idelay){                         
+    
+    config++;
+    if (config >= 359) {config = 0;}
+    for(int idex = 0 ; idex < NUM_LEDS; idex++ ) {
+      leds[idex] = CHSV(config, 255, 255);
+    }
+    LEDS.show();    
+    delay(idelay);
+
+show();
+rainbowFirst = !rainbowFirst;
+}
+
+boolean rainbow2 =true;
+void rainbow_loop(int istep, int idelay) {              //-m3-LOOP HSV RAINBOW
+  idex++;
+  config = config + istep;
+  if (idex >= NUM_LEDS) {idex = 0;}
+  if (config >= 359) {config = 0;}
+  leds[idex] = CHSV(config, 255, 255);
+  LEDS.show();
+  delay(idelay);
+}
+
+
+
+
 
 int runningOffset = 0;
 int runningForward = true;
@@ -52,8 +104,7 @@ void runningLed(int iConfig, CRGB* blinkColor, int blinkDelay, boolean bounce, i
     }
   }
   show();
-  
-  if (bounce){
+   if (bounce){
     if (runningOffset==0) runningForward = true;
     else if (runningOffset==(LEDS_PER_ARM+(length-1)-1)) runningForward = false;
   }
@@ -139,6 +190,8 @@ void pulseBrightness(int iConfig, int startBrightness, int endBrightness, int st
     pulseDirIn = false;
   }
 }
+
+
 
 int blendingStep = 0;
 int blendingForward = true;

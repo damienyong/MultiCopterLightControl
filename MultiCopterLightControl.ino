@@ -1,6 +1,5 @@
 #include <FastSPI_LED2.h>
 #include <EEPROM.h>
-
 #include "config.h"
 
 struct CRGB leds[NUM_LEDS];
@@ -9,21 +8,17 @@ int mode = MODE_0;
 boolean reverse = false;
 int DELAY = 100;
 int config = 0;
-int currentColorIdx = 0;
+int idex = 0;
+
 
 void setup(){
   LEDS.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS);
   clearLeds();
   readColors();
   readLeds();
-  #if defined (INPUT_TERMINAL)
-    setupInputTerminal();
-  #elif defined (INPUT_GUI)
-    setupInputGUI();
-  #elif defined (INPUT_RC)
+   #if defined (INPUT_RC)
     setupInputRC();
-  #elif defined (INPUT_MSP)
-    setupInputMSP();
+  
   #endif
 }
 
@@ -73,39 +68,55 @@ void show(int brightness){
 
 int lastMode = -1;
 void loop(){
-  #if defined (INPUT_TERMINAL)
-    loopInputTerminal();
-  #elif defined (INPUT_GUI)
-    loopInputGUI();
-  #elif defined (INPUT_RC)
+  #if defined (INPUT_RC)
     loopInputRC();
-  #elif defined (INPUT_MSP)
-    loopInputMSP();
   #endif
 
   if (lastMode != mode) delayTime = 0;
   switch(mode){
     case MODE_0:{
-      showCurrentColors(config, DELAY);
+      //Stabilize
+    oneColor(CRGB::Green, DELAY);
+        
+
       break;
     }
     case MODE_1:{
-//      runningLed(config, NULL, 0, true, LEDS_PER_ARM, DELAY); 
-      int arms1[] = {0, 3};
-      int arms2[] = {1, 2};
-      runningLed2(config, arms1, sizeof(arms1)/sizeof(int), arms2, sizeof(arms2)/sizeof(int), 2, DELAY);
-      break;
+      //Loiter
+      rainbow_loop(1,1);
+   break;
     }
     case MODE_2:{
-      pulseBrightness(config, 50, 250, 50, 20);
+      //AltHold 
+      oneColor(CRGB::Blue, DELAY);
       break;
     }
     case MODE_3:{
-//      runningLed(config, &CRGB(250, 250, 250), 100, false, 1, DELAY); 
-//      police(&CRGB(250, 0, 0), &CRGB(0, 0, 250), 500);
-      blendColors(0, 1, 30, 50);
+      //Drift //colorsnotworking
+   runningLed(CRGB::Green, NULL, 0, true, LEDS_PER_ARM, DELAY); 
+      int arms1[] = {0,1,6,7};
+      int arms2[] = {2,3,4,5};
+      runningLed2(CRGB::Blue, arms1, sizeof(arms1)/sizeof(int), arms2, sizeof(arms2)/sizeof(int), 2, DELAY);
+     
       break;
     }
+	case MODE_4:{
+        //Acro
+         police (CRGB::Blue,CRGB::Red,DELAY);
+      break;
+    }
+	case MODE_5:{
+  //Land
+pulseBrightness(CRGB::Red,0,128,4,1);
+
+      break;
+    }
+	case MODE_6:{
+  //noconnection
+      oneColor(CRGB::Red, DELAY);
+      break;
+    }
+
   }
   lastMode = mode;
 }
